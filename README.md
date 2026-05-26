@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Transportation problem solver
 
 ### Cách sử dụng
@@ -65,7 +64,3 @@ Chuỗi để copy-paste thực thi:
   - Hàng 1: `3 1 7`
   - Hàng 2: `2 4 6`
   - Hàng 3: `5 2 3`
-=======
-# transportation-problem-solver
-This program was designed to solve various transportation problems in the Optimization course.
->>>>>>> 03f16374959baa392b866a51fad797400d58c790
