@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thuật toán thế vị | Bài toán vận tải</title>
+  <meta name="description"
+    content="Giải bài toán vận tải cân bằng thu phát bằng thuật toán thế vị MODI với animation từng bước">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">⊛</div>
+        <div class="brand-text">
+          <span class="brand-name">Thuật toán thế vị</span>
+          <span class="brand-sub">Bài toán vận tải cân bằng thu phát</span>
+        </div>
+      </div>
+      <div class="header-btns">
+        <button class="btn btn-ghost" onclick="runDemo()">Ví dụ mẫu</button>
+        <button class="btn btn-primary" onclick="openModal()">Nhập dữ liệu</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="app-main">
+    <!-- Welcome -->
+    <div id="welcomeScreen" class="welcome-screen">
+      <div class="welcome-card">
+        <div class="welcome-glow"></div>
+        <div class="welcome-icon">🚛</div>
+        <h1 class="welcome-title">Bài toán vận tải</h1>
+        <p class="welcome-desc">Giải bài toán vận tải cân bằng thu phát</p>
+        <div class="welcome-actions">
+          <button class="btn btn-primary btn-xl" onclick="runDemo()">Ví dụ mẫu</button>
+          <button class="btn btn-ghost btn-xl" onclick="openModal()">Nhập dữ liệu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Solver UI -->
+    <div id="solverUI" class="solver-ui hidden">
+      <!-- Left: Log -->
+      <div class="log-panel">
+        <div class="panel-hdr">
+          <h2 class="panel-title">Lời giải</h2>
+          <div class="obj-display">
+            <span class="obj-label">f(x)</span>
+            <span class="obj-value" id="objDisplay">—</span>
+          </div>
+        </div>
+        <div class="log-list" id="logList"></div>
+      </div>
+
+      <!-- Right: Table -->
+      <div class="table-panel">
+        <div class="panel-hdr">
+          <h2 class="panel-title">Bảng vận tải</h2>
+          <div class="iter-badge" id="iterBadge">—</div>
+        </div>
+        <div class="table-wrap" id="tableWrap"></div>
+        <div class="controls">
+          <div class="ctrl-btns">
+            <button class="ctrl-btn" id="btnFirst" title="Đầu" onclick="goFirst()">⏮</button>
+            <button class="ctrl-btn" id="btnPrev" title="Trước" onclick="goPrev()">◀</button>
+            <button class="ctrl-btn ctrl-play" id="btnPlay" title="Phát" onclick="togglePlay()">▶</button>
+            <button class="ctrl-btn" id="btnNext" title="Tiếp" onclick="goNext()">▶|</button>
+            <button class="ctrl-btn" id="btnLast" title="Cuối" onclick="goLast()">⏭</button>
+          </div>
+          <div class="ctrl-progress">
+            <span class="step-lbl" id="stepLbl">0 / 0</span>
+            <input type="range" id="stepSlider" class="slider" min="0" max="0" value="0" oninput="goSlider(this.value)">
+            <div class="speed-wrap">
+              <span>Chậm</span>
+              <input type="range" id="speedSlider" class="slider slider-sm" min="400" max="3000" value="1500" step="200"
+                oninput="setSpeed(this.value)">
+              <span>Nhanh</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- INPUT MODAL -->
+  <div id="inputModal" class="modal-overlay hidden" onclick="overlayClick(event)">
+    <div class="modal-box">
+      <div class="modal-hdr">
+        <h3>Nhập dữ liệu bài toán</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Số điểm phát m</label>
+            <input id="mInput" type="number" class="form-control" value="3" min="2" max="8">
+          </div>
+          <div class="form-group">
+            <label>Số điểm thu n</label>
+            <input id="nInput" type="number" class="form-control" value="4" min="2" max="8">
+          </div>
+          <button class="btn btn-secondary" onclick="generateFields()">Tạo bảng →</button>
+        </div>
+        <div id="dynFields"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal()">Hủy</button>
+        <button class="btn btn-primary" onclick="solveFromModal()">Giải</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
