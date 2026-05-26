@@ -2,7 +2,7 @@
 
 ### Cách sử dụng
 
-1. Truy cập đường dẫn live demo: [https://iamduongminh.github.io/transportation-problem-solver/](https://iamduongminh.github.io/transportation-problem-solver/)
+1. Truy cập đường dẫn live demo: [link page](https://iamduongminh.github.io/transportation-problem-solver-2/)
 2. Nhấn nút **Nhập dữ liệu**, điền số điểm phát ($m$) và số điểm thu ($n$).
 3. Nhập dữ liệu lượng cung $a_i$, lượng cầu $b_j$ và ma trận chi phí $c_{ij}$. *(Lưu ý: Chương trình hiện tại yêu cầu Tổng cung phải bằng Tổng cầu).*
    - **Mẹo nhập nhanh:** Bạn có thể bôi đen copy một dãy số cách nhau bằng dấu cách/dấu phẩy rồi click vào ô đầu tiên của Cung/Cầu hoặc hàng Chi phí, sau đó ấn Paste (`Ctrl + V`). Chương trình sẽ tự động điền các số còn lại vào các ô tương ứng.
