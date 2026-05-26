@@ -188,7 +188,7 @@ function solve(m, n, a, b, C) {
     const al = allocs[idx];
     currentX[al.i][al.j] = al.v;
     currentAllocs.push(al);
-    
+
     if (al.ai < al.bj) crossedRows.add(al.i);
     else if (al.bj < al.ai) crossedCols.add(al.j);
     else {
@@ -310,7 +310,7 @@ function solve(m, n, a, b, C) {
       type: 'update', iter, x, basis,
       u: Array(m).fill(null), v: Array(n).fill(null), deltas: nm(m, n),
       enter, cycle: cycle.map(c => [...c]), signs: [...signs], theta, leaving: [...leaving],
-      changed: changed.map(c => [...c]), 
+      changed: changed.map(c => [...c]),
       cRows: Array.from(crossedRows), cCols: Array.from(crossedCols),
       enterDelta, prevObj, obj, m, n, a, b, C
     }));
@@ -552,7 +552,7 @@ function renderTable(s) {
       }
 
       let cls = 'c-main';
-      
+
       if (type === 'initial_alloc' || type === 'initial') {
         if (inB) cls += ' highlight-alloc';
         if ((crSet.has(i) || ccSet.has(j)) && !(type === 'initial_alloc' && chSet.has(key))) {
