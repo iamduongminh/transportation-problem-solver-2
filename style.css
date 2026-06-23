@@ -227,7 +227,7 @@ sup {
 .welcome-icon {
   font-size: 60px;
   margin-bottom: 16px;
-  filter: drop-shadow(0 4px 20px rgba(99, 102, 241, .4))
+  text-shadow: 0 4px 20px rgba(99, 102, 241, .4);
 }
 
 .welcome-title {
