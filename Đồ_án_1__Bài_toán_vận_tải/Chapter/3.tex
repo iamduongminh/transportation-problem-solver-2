@@ -1,0 +1,161 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\chapter{Ứng dụng lập trình giải bài toán vận tải}
+
+\section{Mô tả chương trình}
+
+Nhằm mục đích trực quan hóa các bước tính toán của thuật toán thế vị, em đã xây dựng một chương trình giải bài toán vận tải dưới dạng ứng dụng web. Ứng dụng cung cấp giao diện thân thiện, cho phép người dùng nhập trực tiếp dữ liệu bài toán và theo dõi tường minh từng bước giải dưới dạng các khung hình sinh động.
+
+\textbf{Link truy cập:} \href{https://iamduongminh.github.io/transportation-problem-solver-2/}{transportation-problem-solver}
+
+Với sự hỗ trợ của các công cụ AI, phần giao diện người dùng được thiết kế bằng HTML/CSS, trong khi toàn bộ thuật toán lõi được xử lý bằng JavaScript. Điều này giúp chương trình hoạt động mượt mà trên mọi trình duyệt web mà không đòi hỏi cài đặt thêm phần mềm bên thứ ba. Các giải thuật được tích hợp bao gồm ba phương pháp tìm phương án xuất phát (góc Tây Bắc, cực tiểu chi phí, xấp xỉ Vogel) cùng với thuật toán thế vị \cite{bachkim}.
+
+\section{Hướng dẫn sử dụng}
+Để giải một bài toán vận tải trên chương trình, người dùng thực hiện theo các bước sau:
+
+\textbf{Bước 1: Truy cập và khởi tạo} \\
+Từ màn hình chính của ứng dụng, người dùng nhấn nút \textbf{"Nhập dữ liệu"} để nhập đề bài bài toán cần giải. Nếu chỉ muốn thử nghiệm khả năng hoạt động của chương trình, chỉ cần nhấn nút \textbf{"Ví dụ mẫu"}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/giao_dien_trang_chu.png}
+    \caption{Ảnh giao diện trang chủ}
+\end{figure}
+
+\textbf{Bước 2: Nhập thông số bài toán} \\
+Một bảng nhập liệu sẽ hiện ra. Người dùng điền \textbf{Số điểm phát m} và \textbf{Số điểm thu n}, các ô nhập liệu ma trận tương ứng sẽ lập tức được tự động sinh ra. Lần lượt điền lượng cung $a_i$, lượng cầu $b_j$ và ma trận cước phí $c_{ij}$ vào các ô trống. Sau đó nhấn nút \textbf{"Giải"}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/nhap_du_lieu_bai_toan.png}
+    \caption{Ảnh giao diện nhập dữ liệu bài toàn}
+\end{figure}
+
+\textbf{Bước 3: Tùy chỉnh phương pháp khởi tạo} \\
+Hệ thống chuyển sang giao diện lời giải. Tại đây, người dùng có thể thay đổi phương pháp tìm phương án xuất phát ở mục \textbf{Khởi tạo} (\textit{Góc tây bắc} hoặc \textit{Cực tiểu chi phí}). Kết quả giải toàn bộ bài toán sẽ lập tức được hệ thống tính toán và cập nhật lại.
+
+\textbf{Bước 4: Theo dõi trực quan lời giải} \\
+Sử dụng cụm nút điều khiển hoặc kéo thanh trượt bên dưới để xem trực quan từng bước lặp của thuật toán thế vị. Các thay đổi về phân bổ, việc tạo chu trình, tính các thế vị $u_i, v_j$ và xác định $\Delta_{ij}$ đều sẽ được làm nổi bật bằng màu sắc sinh động trên bảng vận tải cho đến khi đạt được phương án tối ưu.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/giao_dien_loi_giai.png}
+    \caption{Ảnh giao diện lời giải bằng bảng vận tải}
+\end{figure}
+
+\textbf{Bước 5: Nhận kết quả tối ưu} \\
+Khi thuật toán kết thúc khi tất cả các $\Delta_{ij} \le 0$, hệ thống sẽ dừng lại và thông báo phương án tối ưu cuối cùng kèm theo tổng chi phí vận chuyển tương ứng. Bạn có thể dễ dàng xem lại toàn bộ lịch sử các vòng lặp bất cứ lúc nào.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/giao_dien_ket_qua.png}
+    \caption{Ảnh giao diện kết quả phương án tối ưu}
+\end{figure}
+
+\section{Các trường hợp chương trình có thể xử lý}
+Ứng dụng được thiết kế linh hoạt để có thể bao quát toàn bộ các kịch bản của bài toán vận tải:
+\begin{enumerate}
+    \item \textbf{Bài toán cân bằng thu phát:} Hệ thống giải bình thường.
+    \item \textbf{Bài toán không cân bằng:} Chương trình sẽ tự động phát hiện ra thiếu lượng phát hay lượng thu và sinh ra thêm một trạm phát giả hoặc một trạm thu giả với cước phí bằng $0$ để cân bằng lại bài toán trước khi giải.
+    \item \textbf{Bài toán suy biến:} Khi xảy ra hiện tượng triệt tiêu cung-cầu cùng lúc hoặc nhiều ô đạt cực tiểu trong bước nhảy, chương trình tự động tạo các ô số 0 cơ sở được đánh dấu màu cam để đảm bảo số lượng ô cơ sở luôn bằng $m+n-1$, giúp thuật toán không bị mắc kẹt.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{images/giao_dien_suy_bien.png}
+        \caption{Ảnh trường hợp bài toán suy biến}
+    \end{figure}
+\end{enumerate}
+\section{Kiểm thử ứng dụng}
+Dưới đây là phần kiểm thử chương trình bằng cách nhập 2 bài toán điển hình đại diện cho các trường hợp phổ biến. Toàn bộ các bước giải từ khởi tạo đến lặp điều chỉnh đều được chụp trực tiếp từ giao diện của chương trình.
+
+\subsection{Bài toán 1: Trường hợp cân bằng thu phát}
+
+\textbf{1. Đề bài}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_1/de_bai.png}
+    \caption{Ảnh giao diện nhập liệu đề bài}
+\end{figure}
+
+\textbf{2. Khởi tạo phương án xuất phát}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_1/khoi_tao.png}
+    \caption{Phương án cực biên xuất phát}
+\end{figure}
+
+\textbf{3. Quá trình lặp cải thiện phương án}
+Chương trình lần lượt thực hiện các vòng lặp của thuật toán thế vị để tìm chu trình và tính bước nhảy, qua đó phân bổ lại lượng hàng nhằm tối ưu hóa chi phí. Để tránh làm cho báo cáo quá dài bởi ảnh chụp giao diện, em sẽ chỉ chụp kết quả sau mỗi vòng lặp, những bước chi tiết bên trong mỗi vòng em khuyến khích người đọc tự mình trải nghiệm trong website với link truy cập đã đề cập ở phần mô tả.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_1/vong_1.png}
+    \caption{Ảnh vòng lặp thứ nhất}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_1/vong_2.png}
+    \caption{Ảnh vòng lặp thứ hai}
+\end{figure}
+
+\textbf{4. Kết quả phương án tối ưu}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_1/vong_3.png}
+    \caption{Ảnh vòng lặp thứ ba}
+\end{figure}
+
+\subsection{Bài toán 2: Trường hợp không cân bằng thu phát}
+Dưới đây là tiến trình giải quyết một bài toán không cân bằng, chương trình sẽ tự động thêm cột hoặc hàng giả và xử lý trơn tru. Đặc biệt, bài toán này sẽ dẫn đến kết quả phương án tối ưu không duy nhất.
+
+\textbf{1. Đề bài}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_2/de_bai.png}
+    \caption{Ảnh giao diện nhập liệu đề bài}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_2/nhan_xet_ban_dau.png}
+    \caption{Ảnh phát hiện bài toán không cân bằng}
+\end{figure}
+
+\textbf{2. Khởi tạo phương án xuất phát}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_2/khoi_tao.png}
+    \caption{Ảnh khởi tạo phương án ban đầu}
+\end{figure}
+
+\textbf{3. Quá trình lặp cải thiện phương án}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_2/vong_1.png}
+    \caption{Ảnh vòng lặp thứ nhất}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_2/vong_2.png}
+    \caption{Ảnh vòng lặp thứ hai}
+\end{figure}
+
+\textbf{4. Phát hiện phương án tối ưu không duy nhất}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_2/phuong_an_toi_uu_khong_duy_nhat.png}
+    \caption{Hệ thống thông báo đạt phương án tối ưu nhưng không duy nhất sau vòng 2}
+\end{figure}
+
+\textbf{5. Quá trình tìm phương án tối ưu thứ hai}
+Chương trình tự động chọn ô có $\Delta = 0$ để đưa vào cơ sở và tiếp tục vòng lặp nhằm tìm ra phương án tối ưu thứ hai.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_2/vong_3.png}
+    \caption{Ảnh vòng lặp thứ ba tìm ra phương án tối ưu đầu tiên}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{dang_2/vong_4.png}
+    \caption{Ảnh vòng lặp thứ 4 tìm ra phương án tối ưu tổng quát}
+\end{figure}
+
+\end{document}

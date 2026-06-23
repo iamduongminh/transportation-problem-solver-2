@@ -67,6 +67,69 @@ function northwestCornerSteps(a0, b0, m, n) {
   return { x, allocs };
 }
 
+function leastCostSteps(a0, b0, m, n, C) {
+  const x = Array.from({ length: m }, () => Array(n).fill(0));
+  const a = [...a0], b = [...b0];
+  const allocs = [];
+  const crossedRows = new Set();
+  const crossedCols = new Set();
+
+  while (crossedRows.size < m && crossedCols.size < n) {
+    let minC = Infinity;
+    let candidates = [];
+    
+    for (let i = 0; i < m; i++) {
+      if (crossedRows.has(i)) continue;
+      for (let j = 0; j < n; j++) {
+        if (crossedCols.has(j)) continue;
+        if (C[i][j] < minC) {
+          minC = C[i][j];
+          candidates = [[i, j]];
+        } else if (C[i][j] === minC) {
+          candidates.push([i, j]);
+        }
+      }
+    }
+    
+    if (candidates.length === 0) break;
+    
+    let bestI = -1, bestJ = -1, maxAlloc = -1;
+    for (const [i, j] of candidates) {
+      const v = Math.min(a[i], b[j]);
+      if (v > maxAlloc) {
+        maxAlloc = v;
+        bestI = i;
+        bestJ = j;
+      }
+    }
+    
+    const i = bestI;
+    const j = bestJ;
+    const v = maxAlloc;
+    
+    x[i][j] = v;
+    allocs.push({ i, j, v, ai: a[i], bj: b[j] });
+    
+    a[i] -= v;
+    b[j] -= v;
+    
+    if (a[i] <= 1e-9 && b[j] <= 1e-9) {
+      if (crossedRows.size < m - 1 && crossedCols.size < n - 1) {
+        crossedRows.add(i);
+      } else if (crossedRows.size < m - 1) {
+        crossedRows.add(i);
+      } else {
+        crossedCols.add(j);
+      }
+    } else if (a[i] <= 1e-9) {
+      crossedRows.add(i);
+    } else {
+      crossedCols.add(j);
+    }
+  }
+  return { x, allocs };
+}
+
 function getBasis(x, m, n) {
   const b = [];
   for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) if (x[i][j] > 1e-9) b.push([i, j]);
@@ -175,9 +238,22 @@ function findCycle(er, ec, basis) {
 
 // ── SOLVE ────────────────────────────────────────────────────────────
 
-function solve(m, n, a, b, C) {
+function solve(m, n, a, b, C, method = 'nw', unbalanced = false, isSupplyGreater = false, diff = 0, sumA = 0, sumB = 0) {
   const out = [];
-  const { x: x0, allocs } = northwestCornerSteps(a, b, m, n);
+
+  if (unbalanced) {
+    out.push(mkStep({
+      type: 'balance', iter: 0,
+      x: Array.from({ length: m }, () => Array(n).fill(0)),
+      basis: [], u: Array(m).fill(null), v: Array(n).fill(null), deltas: nm(m, n),
+      enter: null, cycle: null, signs: null, theta: null, leaving: null, changed: [],
+      cRows: [], cCols: [], enterDelta: null, prevObj: null, obj: 0,
+      m, n, a, b, C, 
+      isSupplyGreater, diff, sumA, sumB
+    }));
+  }
+
+  const { x: x0, allocs } = method === 'lc' ? leastCostSteps(a, b, m, n, C) : northwestCornerSteps(a, b, m, n);
 
   let currentX = Array.from({ length: m }, () => Array(n).fill(0));
   let currentAllocs = [];
@@ -220,6 +296,8 @@ function solve(m, n, a, b, C) {
     enterDelta: null, prevObj: null, obj, m, n, a, b, C, allocs
   }));
 
+  let alreadyFoundAltOptimal = false;
+
   for (let iter = 1; iter <= 60; iter++) {
     // Potentials
     const { u, v } = computePotentials(basis, C, m, n);
@@ -241,17 +319,49 @@ function solve(m, n, a, b, C) {
 
     // Find max delta
     let maxD = -Infinity, enter = null;
-    for (let i = 0; i < m; i++) for (let j = 0; j < n; j++)
-      if (deltas[i][j] !== null && deltas[i][j] > maxD) { maxD = deltas[i][j]; enter = [i, j]; }
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        if (deltas[i][j] !== null && deltas[i][j] > maxD) { 
+          maxD = deltas[i][j]; 
+          enter = [i, j]; 
+        }
+      }
+    }
 
-    if (maxD <= 1e-9) {
+    if (maxD < -1e-9) {
+      if (!alreadyFoundAltOptimal) {
+        out.push(mkStep({
+          type: 'optimal', iter, x, basis, u, v, deltas,
+          enter: null, cycle: null, signs: null, theta: null, leaving: null, changed: [],
+          cRows: Array.from(crossedRows), cCols: Array.from(crossedCols),
+          enterDelta: null, prevObj: null, obj, m, n, a, b, C
+        }));
+      } else {
+        out.push(mkStep({
+          type: 'alt_optimal_summary', iter, x, basis, u, v, deltas,
+          enter: null, cycle: null, signs: null, theta: null, leaving: null, changed: [],
+          cRows: Array.from(crossedRows), cCols: Array.from(crossedCols),
+          enterDelta: null, prevObj: null, obj, m, n, a, b, C
+        }));
+      }
+      break;
+    } else if (maxD <= 1e-9) {
+      if (alreadyFoundAltOptimal) {
+        out.push(mkStep({
+          type: 'alt_optimal_summary', iter, x, basis, u, v, deltas,
+          enter: null, cycle: null, signs: null, theta: null, leaving: null, changed: [],
+          cRows: Array.from(crossedRows), cCols: Array.from(crossedCols),
+          enterDelta: null, prevObj: null, obj, m, n, a, b, C
+        }));
+        break;
+      }
       out.push(mkStep({
-        type: 'optimal', iter, x, basis, u, v, deltas,
+        type: 'optimal_not_unique', iter, x, basis, u, v, deltas,
         enter: null, cycle: null, signs: null, theta: null, leaving: null, changed: [],
         cRows: Array.from(crossedRows), cCols: Array.from(crossedCols),
         enterDelta: null, prevObj: null, obj, m, n, a, b, C
       }));
-      break;
+      alreadyFoundAltOptimal = true;
     }
 
     const enterDelta = deltas[enter[0]][enter[1]];
@@ -324,17 +434,32 @@ function mkStep(d) { return { ...d }; }
 
 function buildLog(s) {
   switch (s.type) {
+    case 'balance': return logBalance(s);
     case 'initial_alloc': return logInitialAlloc(s);
     case 'initial': return logInitial(s);
     case 'potentials': return logPotentials(s);
     case 'deltas': return logDeltas(s);
+    case 'optimal': return logOptimal(s);
+    case 'optimal_not_unique': return logOptimalNotUnique(s);
+    case 'alt_optimal_summary': return logAltOptimalSummary(s);
     case 'enter': return logEnter(s);
     case 'cycle': return logCycle(s);
     case 'theta': return logTheta(s);
     case 'update': return logUpdate(s);
-    case 'optimal': return logOptimal(s);
     default: return '';
   }
+}
+
+function logBalance(s) {
+  const msg = s.isSupplyGreater 
+    ? `Tổng cung (${s.sumA}) > Tổng cầu (${s.sumB}).<br>Thêm điểm thu giả j=${s.n} với lượng thu b<sub>${s.n}</sub> = ${s.diff} và cước phí c<sub>i,${s.n}</sub> = 0 (∀i).`
+    : `Tổng cầu (${s.sumB}) > Tổng cung (${s.sumA}).<br>Thêm điểm phát giả i=${s.m} với lượng phát a<sub>${s.m}</sub> = ${s.diff} và cước phí c<sub>${s.m},j</sub> = 0 (∀j).`;
+      
+  return `
+<div class="ls">
+  <div class="lverdict warn" style="margin-bottom:8px; display:inline-block;">Bài toán không cân bằng!</div>
+  <div class="ll">${msg}</div>
+</div>`;
 }
 
 function logInitialAlloc(s) {
@@ -345,18 +470,24 @@ function logInitialAlloc(s) {
       const al = allocs[idx];
       const { i, j, v, ai, bj } = al;
       const minExpr = `min(a<sub>${i + 1}</sub>, b<sub>${j + 1}</sub>) = min(${ai}, ${bj}) = ${v}`;
-      let note = '';
-      if (ai < bj) note = `→ Hàng ${i + 1} hết hàng, xóa hàng`;
-      else if (bj < ai) note = `→ Cột ${j + 1} đủ hàng, xóa cột`;
-      else note = `→ Hàng ${i + 1} hết hàng & cột ${j + 1} đủ hàng`;
+      
+      let updateText = `Cập nhật: a'<sub>${i + 1}</sub> = ${ai} − ${v} = ${ai - v}`;
+      if (ai === v) updateText += ` <span class="ldim">(đã phát hết)</span>`;
+      updateText += `, b'<sub>${j + 1}</sub> = ${bj} − ${v} = ${bj - v}`;
+      if (bj === v) updateText += ` <span class="ldim">(đã nhận đủ)</span>`;
 
       const isLast = idx === allocs.length - 1;
-      allocRows += `<div class="leq${isLast ? ' hl' : ''}">x<sub>${i + 1}${j + 1}</sub> = ${minExpr} <span class="ldim">${note}</span></div>`;
+      allocRows += `
+<div class="leq${isLast ? ' hl' : ''}" style="margin-bottom:6px;">
+  <div>x<sub>${i + 1}${j + 1}</sub> = ${minExpr}</div>
+  <div style="margin-top:3px; font-size: 0.95em; color: var(--cyan);">${updateText}</div>
+</div>`;
     }
   }
 
+  const methodText = prob && prob.method === 'lc' ? 'Phương pháp cực tiểu chi phí' : 'Phương pháp góc tây bắc';
   return `
-<div class="ls"><div class="ll">Phương pháp góc tây bắc (Đang phân phối)</div>
+<div class="ls"><div class="ll">${methodText} (Đang phân phối)</div>
 ${allocRows}</div>`;
 }
 
@@ -371,16 +502,23 @@ function logInitial(s) {
     for (const al of allocs) {
       const { i, j, v, ai, bj } = al;
       const minExpr = `min(a<sub>${i + 1}</sub>, b<sub>${j + 1}</sub>) = min(${ai}, ${bj}) = ${v}`;
-      let note = '';
-      if (ai < bj) note = `→ Hàng ${i + 1} hết hàng, xóa hàng`;
-      else if (bj < ai) note = `→ Cột ${j + 1} đủ hàng, xóa cột`;
-      else note = `→ Hàng ${i + 1} hết hàng & cột ${j + 1} đủ hàng`;
-      allocRows += `<div class="leq">x<sub>${i + 1}${j + 1}</sub> = ${minExpr} <span class="ldim">${note}</span></div>`;
+      
+      let updateText = `Cập nhật: a'<sub>${i + 1}</sub> = ${ai} − ${v} = ${ai - v}`;
+      if (ai === v) updateText += ` <span class="ldim">(đã phát hết)</span>`;
+      updateText += `, b'<sub>${j + 1}</sub> = ${bj} − ${v} = ${bj - v}`;
+      if (bj === v) updateText += ` <span class="ldim">(đã nhận đủ)</span>`;
+      
+      allocRows += `
+<div class="leq" style="margin-bottom:6px;">
+  <div>x<sub>${i + 1}${j + 1}</sub> = ${minExpr}</div>
+  <div style="margin-top:3px; font-size: 0.95em; color: var(--cyan);">${updateText}</div>
+</div>`;
     }
   }
 
+  const methodText = prob && prob.method === 'lc' ? 'Phương pháp cực tiểu chi phí' : 'Phương pháp góc tây bắc';
   return `
-<div class="ls"><div class="ll">Phương pháp góc tây bắc</div>
+<div class="ls"><div class="ll">${methodText}</div>
 ${allocRows}
 <div class="lrow" style="margin-top:6px"><span class="lk">G(x⁰):</span><span class="lv">{${bStr}}</span></div>
 <div class="lrow"><span class="lk">|G(x⁰)| = ${basis.length} = m+n−1 = ${m + n - 1}</span><span class="lv lpos">✓</span></div>
@@ -481,9 +619,44 @@ function logOptimal(s) {
   const terms = basis.filter(([i, j]) => x[i][j] > 0).map(([i, j]) => `${C[i][j]}·${x[i][j]}`).join('+');
   return `
 <div class="ls">
-<div class="lverdict ok" style="margin-bottom:8px">Tất cả Δ<sub>ij</sub>≤0 → x* là phương án tối ưu!</div>
+<div class="lverdict ok" style="margin-bottom:8px">Đã đạt phương án tối ưu duy nhất!</div>
 <div class="lrow"><span class="lk">x*:</span><span class="lv">${xStr}</span></div>
-<div class="lf">f* = ${terms} = <span class="lhl-big">${obj}</span></div></div>`;
+<div class="lf">f* = ${terms} = <span class="lhl-big">${obj}</span></div>
+<div class="ll" style="margin-top:4px">Mọi <span class="lmath">Δ<sub>ij</sub> < 0</span> (ô ngoài cơ sở), phương án tối ưu là duy nhất.</div></div>`;
+}
+
+function logOptimalNotUnique(s) {
+  const { x, basis, obj, m, n, C } = s;
+  const xStr = basis.filter(([i, j]) => x[i][j] > 0).map(([i, j]) => `x<sub>${i + 1}${j + 1}</sub>=${x[i][j]}`).join(', ');
+  const terms = basis.filter(([i, j]) => x[i][j] > 0).map(([i, j]) => `${C[i][j]}·${x[i][j]}`).join('+');
+  return `
+<div class="ls">
+  <div class="lverdict" style="margin-bottom:8px">Phương án tối ưu nhưng KHÔNG DUY NHẤT!</div>
+  <div class="lrow" style="margin-top:6px"><span class="lk">x*:</span><span class="lv">${xStr}</span></div>
+  <div class="lf">f* = ${terms} = <span class="lhl-big">${obj}</span></div>
+  <div class="ll" style="margin-top:8px">
+    Mọi <span class="lmath">Δ<sub>ij</sub> ≤ 0</span> nên đây là phương án tối ưu.
+    Tuy nhiên, tồn tại ô ngoài cơ sở có <span class="lmath">Δ = 0</span>. 
+    Ta đưa ô này vào cơ sở để tìm một phương án cực biên tối ưu khác.
+  </div>
+</div>`;
+}
+
+function logAltOptimalSummary(s) {
+  const { x, basis, obj, m, n, C } = s;
+  const xStr = basis.filter(([i, j]) => x[i][j] > 0).map(([i, j]) => `x<sub>${i + 1}${j + 1}</sub>=${x[i][j]}`).join(', ');
+  const terms = basis.filter(([i, j]) => x[i][j] > 0).map(([i, j]) => `${C[i][j]}·${x[i][j]}`).join('+');
+  return `
+<div class="ls">
+  <div class="lverdict ok" style="margin-bottom:8px">Phương án cực biên tối ưu thứ 2</div>
+  <div class="lrow" style="margin-top:6px"><span class="lk">x**:</span><span class="lv">${xStr}</span></div>
+  <div class="lf">f** = ${terms} = <span class="lhl-big">${obj}</span></div>
+  <div class="ll" style="margin-top:8px; color: var(--cyan);">
+    Tập vô số nghiệm tối ưu tổng quát của bài toán là tổ hợp lồi của các phương án cực biên tối ưu này:
+    <br><br>
+    <span class="lmath">x = λ·x* + (1 - λ)·x**</span> (với <span class="lmath">0 ≤ λ ≤ 1</span>)
+  </div>
+</div>`;
 }
 
 // ── TABLE RENDERER ───────────────────────────────────────────────────
@@ -560,11 +733,18 @@ function renderTable(s) {
         }
       }
 
-      if (type === 'initial_alloc' && chSet.has(key)) cls += ' highlight-change'; // current alloc
+      if (type === 'balance') {
+        if (s.isSupplyGreater && j === n - 1) cls += ' highlight-change';
+        if (!s.isSupplyGreater && i === m - 1) cls += ' highlight-change';
+      }
+
+      if (type === 'initial_alloc' && chSet.has(key)) {
+        cls += (prob && prob.method === 'lc') ? ' highlight-optimal' : ' highlight-change'; // green for LC, purple for NW
+      }
       else if (type === 'update' && chSet.has(key)) cls += ' highlight-change';
       else if (cycSign !== undefined && type !== 'update') cls += ' highlight-cycle';
       else if (isEnter && type !== 'cycle' && type !== 'theta' && type !== 'update') cls += ' highlight-enter';
-      else if (inB && type === 'optimal') cls += ' highlight-optimal';
+      else if (inB && (type === 'optimal' || type === 'optimal_not_unique' || type === 'alt_optimal_summary')) cls += ' highlight-optimal';
 
       h += `<td class="${cls}">${main}</td>`;
     }
@@ -578,6 +758,7 @@ function renderTable(s) {
 
 function stepTitle(s) {
   const t = {
+    balance: 'Cân bằng bài toán',
     initial_alloc: 'Khởi tạo phương án ban đầu',
     initial: 'Khởi tạo phương án ban đầu',
     potentials: `Vòng ${s.iter} – Bước 1: Tính các thế vị u<sub>i</sub> và v<sub>j</sub>`,
@@ -586,7 +767,9 @@ function stepTitle(s) {
     cycle: `Vòng ${s.iter} – Bước 4.2 & 4.3: Tìm chu trình K, đánh dấu ±`,
     theta: `Vòng ${s.iter} – Bước 4.4: Tính θ`,
     update: `Vòng ${s.iter} – Bước 4.5: Cập nhật x⁰ := x¹, G(x⁰) := G(x¹)`,
-    optimal: '✓ Phương án tối ưu!'
+    optimal: '✓ Phương án tối ưu!',
+    optimal_not_unique: '✓ Phương án tối ưu (Không duy nhất)',
+    alt_optimal_summary: 'Tập nghiệm tối ưu tổng quát'
   };
   return t[s.type] || s.type;
 }
@@ -691,14 +874,52 @@ function setSpeed(v) { speed = Math.max(300, 3600 - parseInt(v)); }  // invert: 
 
 // ── ENTRY POINTS ─────────────────────────────────────────────────────
 
-function runSolver(m, n, a, b, C) {
+function changeMethod(method) {
+  if (!prob) return;
+  if (playing) pausePlay();
+  runSolver(prob.m, prob.n, prob.a, prob.b, prob.C, method);
+}
+
+function runSolver(m_orig, n_orig, a_orig, b_orig, C_orig, method = 'nw') {
   // Show solver UI
   document.getElementById('welcomeScreen').classList.add('hidden');
   document.getElementById('solverUI').classList.remove('hidden');
+  
+  // Show header buttons
+  const headerBtns = document.getElementById('headerBtns');
+  if (headerBtns) headerBtns.classList.remove('hidden');
+
   if (playing) pausePlay();
 
-  prob = { m, n, a, b, C };
-  steps = solve(m, n, a, b, C);
+  const sel = document.getElementById('methodSelect');
+  if (sel && sel.value !== method) sel.value = method;
+
+  let m = m_orig, n = n_orig;
+  let a = [...a_orig], b = [...b_orig];
+  let C = C_orig.map(r => [...r]);
+
+  let sumA = a.reduce((acc, v) => acc + v, 0);
+  let sumB = b.reduce((acc, v) => acc + v, 0);
+  let unbalanced = false;
+  let diff = 0;
+
+  if (Math.abs(sumA - sumB) > 1e-6) {
+    unbalanced = true;
+    if (sumA > sumB) {
+      diff = sumA - sumB;
+      b.push(diff);
+      n++;
+      for (let i = 0; i < m; i++) C[i].push(0);
+    } else {
+      diff = sumB - sumA;
+      a.push(diff);
+      m++;
+      C.push(Array(n).fill(0));
+    }
+  }
+
+  prob = { m, n, a, b, C, method };
+  steps = solve(m, n, a, b, C, method, unbalanced, sumA > sumB, diff, sumA, sumB);
 
   // Setup slider
   const sl = document.getElementById('stepSlider');
@@ -714,7 +935,10 @@ function runDemo() {
   const a = [50, 70, 80];
   const b = [60, 30, 40, 70];
   const C = [[2, 4, 5, 1], [3, 6, 4, 8], [1, 2, 5, 3]];
-  runSolver(m, n, a, b, C);
+  
+  const methodSelect = document.getElementById('methodSelect');
+  const method = methodSelect ? methodSelect.value : 'nw';
+  runSolver(m, n, a, b, C, method);
 }
 
 // ── MODAL ────────────────────────────────────────────────────────────
@@ -824,21 +1048,13 @@ function solveFromModal() {
   }
 
   // Validate balance
-  const sumA = a.reduce((s, v) => s + v, 0);
-  const sumB = b.reduce((s, v) => s + v, 0);
   const errDiv = document.getElementById('dynFields').querySelector('.err-msg');
   if (errDiv) errDiv.remove();
 
-  if (Math.abs(sumA - sumB) > 1e-6) {
-    const err = document.createElement('div');
-    err.className = 'err-msg';
-    err.innerHTML = `Bài toán chưa cân bằng! Σaᵢ=${sumA} ≠ Σbⱼ=${sumB}`;
-    document.getElementById('dynFields').appendChild(err);
-    return;
-  }
-
   closeModal();
-  runSolver(m, n, a, b, C);
+  const methodSelect = document.getElementById('methodSelect');
+  const method = methodSelect ? methodSelect.value : 'nw';
+  runSolver(m, n, a, b, C, method);
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────

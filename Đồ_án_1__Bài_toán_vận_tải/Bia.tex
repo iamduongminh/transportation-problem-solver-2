@@ -1,0 +1,57 @@
+\documentclass[main]{subfiles}
+\newcommand{\underwrite}[3][]{% \underwrite[<thickness>]{<numerator>}{<denominator>}
+	\genfrac{}{}{#1}{}{\textstyle #2}{\scriptstyle #3}
+}
+\begin{document}
+	\begin{titlepage}
+		
+		\begin{tikzpicture}[remember picture,overlay,inner sep=0,outer sep=0]
+			\draw[red!70!black,line width=4pt] ([xshift=-2.5cm,yshift=-2cm]current page.north east) coordinate (A)--
+			([xshift=3.5cm,yshift=-2cm]current page.north west) coordinate(B)--
+			([xshift=3.5cm,yshift=2cm]current page.south west) coordinate (C)--
+			([xshift=-2.5cm,yshift=2cm]current page.south east) coordinate(D)--cycle;
+			
+			\draw ([yshift=0.5cm,xshift=-0.5cm]A)-- ([yshift=0.5cm,xshift=0.5cm]B)--
+			([yshift=-0.5cm,xshift=0.5cm]B) --([yshift=-0.5cm,xshift=-0.5cm]B)--([yshift=0.5cm,xshift=-0.5cm]C)--([yshift=0.5cm,xshift=0.5cm]C)--([yshift=-0.5cm,xshift=0.5cm]C)-- ([yshift=-0.5cm,xshift=-0.5cm]D)--([yshift=0.5cm,xshift=-0.5cm]D)--([yshift=0.5cm,xshift=0.5cm]D)--([yshift=-0.5cm,xshift=0.5cm]A)--([yshift=-0.5cm,xshift=-0.5cm]A)--([yshift=0.5cm,xshift=-0.5cm]A);
+			
+			\draw ([yshift=-0.3cm,xshift=0.3cm]A)-- ([yshift=-0.3cm,xshift=-0.3cm]B)--
+			([yshift=0.3cm,xshift=-0.3cm]B) --([yshift=0.3cm,xshift=0.3cm]B)--([yshift=-0.3cm,xshift=0.3cm]C)--([yshift=-0.3cm,xshift=-0.3cm]C)--([yshift=0.3cm,xshift=-0.3cm]C)-- ([yshift=0.3cm,xshift=0.3cm]D)--([yshift=-0.3cm,xshift=0.3cm]D)--([yshift=-0.3cm,xshift=-0.3cm]D)--([yshift=0.3cm,xshift=-0.3cm]A)--([yshift=0.3cm,xshift=0.3cm]A)--([yshift=-0.3cm,xshift=0.3cm]A);
+			
+		\end{tikzpicture}
+		
+		\thispagestyle{empty}
+
+		\begin{center}
+			
+			{\textbf{\Large{ĐẠI HỌC BÁCH KHOA HÀ NỘI}}}\\[0.2cm]
+			{\textbf{\Large{KHOA TOÁN - TIN}}}\\[1.2cm]
+			
+			\centering
+			\begin{minipage}{7cm}
+				\centering
+				\includegraphics[scale=0.5]{"Logo HUST"}
+			\end{minipage}%
+			
+			\vspace{25pt}
+			{\textbf{\huge{ ĐỒ ÁN I }}}\\[0.8cm]
+			{\textbf{\huge{ Bài toán vận tải và thuật toán thế vị }}}\\[1cm]
+			
+			
+			{\large
+				\begin{tabular}{r l}
+					
+					\textbf{Sinh viên thực hiện:}&Dương Quang Minh\\[0.2cm]
+					\textbf{Mã số sinh viên:}&20237362\\[0.2cm]
+					\textbf{Giảng viên hướng dẫn:}&TS. Bùi Xuân Diệu\\[1.5cm]
+					{}&\begin{tabular}{c} \rule{4.5cm}{0.4pt}\\[-0.25cm] \small{Chữ ký của GVHD} \end{tabular} \\[1cm] 
+				\end{tabular}
+				
+				{\bf HÀ NỘI, 06/2026}
+			}
+			
+		\end{center}
+		
+		
+	\end{titlepage}
+	
+\end{document}

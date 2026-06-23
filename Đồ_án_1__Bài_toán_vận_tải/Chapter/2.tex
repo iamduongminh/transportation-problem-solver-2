@@ -1,0 +1,181 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\chapter{Thuật toán thế vị}
+
+Thuật toán thế vị là một biến thể của thuật toán đơn hình được Dantzig xây dựng chuyên biệt để giải bài toán vận tải, bằng cách khai thác cấu trúc đồ thị hai phía của bài toán \cite{dantzig1951}.
+
+\section{Khái niệm về ô cơ sở và ma trận ràng buộc}
+    
+Giả sử $A$ là ma trận hệ số của hệ phương trình ràng buộc \eqref{eq:supply}-\eqref{eq:demand}. Hệ này bao gồm tổng cộng $m+n$ phương trình. Tuy nhiên, nếu ta lấy tổng của tất cả $m$ phương trình ràng buộc trạm phát, ta có:
+\[ \sum_{i=1}^{m} \left( \sum_{j=1}^{n} x_{ij} \right) = \sum_{i=1}^{m} a_i \]
+Tương tự, khi lấy tổng của tất cả $n$ phương trình ràng buộc trạm thu, ta cũng nhận được:
+\[ \sum_{j=1}^{n} \left( \sum_{i=1}^{m} x_{ij} \right) = \sum_{j=1}^{n} b_j \]
+Mặt khác, theo điều kiện cân bằng thu phát của bài toán, ta luôn có:
+\[ \sum_{i=1}^{m} a_i = \sum_{j=1}^{n} b_j \]
+Điều này dẫn đến việc vế trái của hai tổng trên hoàn toàn đồng nhất. Nói cách khác, một phương trình bất kỳ trong hệ có thể được biểu diễn tuyến tính thông qua $m+n-1$ phương trình còn lại. Chính vì sự phụ thuộc tuyến tính này, số lượng phương trình độc lập tối đa của hệ không phải là $m+n$, dẫn đến hạng của ma trận hệ số $A$ bị giảm đi $1$. Kết quả quan trọng này được phát biểu thành định lý sau:
+    
+\begin{theorem}
+    Hạng của ma trận hệ số $A$ của bài toán vận tải là $r(A) = m + n - 1$.
+\end{theorem}
+    
+Theo lý thuyết QHTT cơ bản, số lượng thành phần cơ sở trong một phương án cực biên không suy biến luôn bằng chính hạng của ma trận hệ số A. Do vậy, từ định lý trên, ta có thể khẳng định rằng một phương án cực biên không suy biến của bài toán vận tải sẽ luôn chứa đúng $m+n-1$ thành phần cơ sở, tương ứng với các giá trị $x_{ij} > 0$.
+\begin{definition}[Ô cơ sở và phương án cực biên]
+    Giao của dòng $i$ và cột $j$ trên bảng vận tải được gọi là ô $(i,j)$.
+    Một tập hợp $B$ gồm $m+n-1$ ô được gọi là tập ô cơ sở nếu hệ véc tơ cột tương ứng của chúng độc lập tuyến tính. Các ô thuộc $B$ gọi là ô cơ sở, các ô không thuộc $B$ gọi là ô phi cơ sở.
+    Phương án tương ứng mà tại đó $x_{ij} = 0 \,\, \forall (i,j) \notin B$ được gọi là phương án cực biên.
+\end{definition}
+
+\section{Các phương pháp tìm phương án cực biên xuất phát}
+Để bắt đầu thuật toán thế vị, ta cần tìm một phương án cực biên xuất phát thỏa mãn có đúng $m+n-1$ ô cơ sở. Ba phương pháp phổ biến thường được sử dụng bao gồm \cite{bachkim}:
+
+\subsection{Phương pháp góc Tây Bắc}
+Phương pháp này điền hàng vào bảng theo thứ tự từ góc trên cùng bên trái (Tây Bắc) dần xuống góc dưới cùng bên phải (Đông Nam) mà không quan tâm đến cước phí.
+\begin{itemize}
+    \item \textbf{Bước 1:} Xét ô ở góc Tây Bắc của phần bảng chưa phân phối (ban đầu là ô $(1,1)$).
+    \item \textbf{Bước 2:} Phân bổ lượng hàng tối đa có thể: $x_{ij} = \min(a_i, b_j)$.
+    \item \textbf{Bước 3:} Xử lý trong từng trường hợp:
+        \begin{itemize}
+            \item Nếu $a_i < b_j$: Trạm $i$ đã phát hết hàng. Cập nhật nhu cầu $b_j := b_j - a_i$. Loại bỏ dòng $i$ khỏi quá trình phân bổ. Chuyển sang ô $(i+1, j)$.
+            \item Nếu $a_i > b_j$: Trạm $j$ đã nhận đủ. Cập nhật trữ lượng $a_i := a_i - b_j$. Loại bỏ cột $j$. Chuyển sang ô $(i, j+1)$.
+            \item Nếu $a_i = b_j$: Cả dòng $i$ và cột $j$ đều thỏa mãn. Để tránh suy biến (mất số lượng ô cơ sở), ta gán ô đó là $x_{ij} = a_i$, bỏ cột $j$, và chuyển sang ô $(i, j+1)$ nhưng với lượng phân bổ bằng $0$ (tạo một ô cơ sở có giá trị bằng 0).
+        \end{itemize}
+    \item \textbf{Bước 4:} Lặp lại cho đến khi phân bổ hết lượng hàng.
+\end{itemize}
+
+\subsection{Phương pháp cực tiểu chi phí}
+Phương pháp này ưu tiên phân bổ hàng vào các ô có chi phí rẻ nhất để làm giảm giá trị hàm mục tiêu ban đầu.
+\begin{itemize}
+    \item \textbf{Bước 1:} Trong toàn bộ các ô chưa bị loại, chọn ô $(i,j)$ có cước phí $c_{ij}$ nhỏ nhất. (Nếu có nhiều ô bằng nhau, chọn tùy ý).
+    \item \textbf{Bước 2:} Phân bổ $x_{ij} = \min(a_i, b_j)$.
+    \item \textbf{Bước 3:} Cập nhật lại lượng cung $a_i$ và cầu $b_j$ tương tự như phương pháp góc Tây Bắc. Gạch bỏ dòng (hoặc cột) đã không còn hàng hóa.
+    \item \textbf{Bước 4:} Lặp lại Bước 1 với các ô còn lại cho đến khi phân bổ xong.
+\end{itemize}
+
+\subsection{Phương pháp xấp xỉ Vogel}
+Đây là phương pháp tìm ra phương án cực biên xuất phát rất gần với phương án tối ưu dựa trên khái niệm chi phí cơ hội. Gọi $I$ là tập các chỉ số dòng và $J$ là tập các chỉ số cột chưa bị loại bỏ. Khởi tạo $I = \{1, 2, \dots, m\}$ và $J = \{1, 2, \dots, n\}$.
+\begin{itemize}
+    \item \textbf{Bước 1:} Trên mỗi dòng $i \in I$, tìm hai cước phí nhỏ nhất và nhỏ thứ hai. Gọi chúng lần lượt là $c_{i, j_1}$ và $c_{i, j_2}$. Tương tự, trên mỗi cột $j \in J$, tìm hai cước phí nhỏ nhất và nhỏ thứ hai, gọi chúng là $c_{i_1, j}$ và $c_{i_2, j}$.
+    \item \textbf{Bước 2:} Tính độ chênh lệch cước phí (chi phí cơ hội) cho mỗi dòng $\Delta_i$ và mỗi cột $\Delta_j$ theo công thức:
+    \[ \Delta_i = |c_{i, j_1} - c_{i, j_2}|, \quad \forall i \in I \]
+    \[ \Delta_j = |c_{i_1, j} - c_{i_2, j}|, \quad \forall j \in J \]
+    \item \textbf{Bước 3:} Chọn dòng hoặc cột có độ chênh lệch lớn nhất:
+    \[ \Delta_{\max} = \max \left\{ \max_{i \in I} \Delta_i, \max_{j \in J} \Delta_j \right\} \]
+    Giả sử $\Delta_{\max}$ đạt được tại dòng $i^*$ (hoặc cột $j^*$).
+    \item \textbf{Bước 4:} Trong dòng $i^*$ (hoặc cột $j^*$) vừa chọn, xác định ô có cước phí nhỏ nhất, giả sử là ô $(i^*, j^*)$ với $c_{i^*, j^*} = \min_{j \in J} c_{i^*, j}$ (hoặc $\min_{i \in I} c_{i, j^*}$). Phân bổ lượng hàng tối đa vào ô đó: 
+    \[ x_{i^*, j^*} = \min(a_{i^*}, b_{j^*}) \]
+    \item \textbf{Bước 5:} Cập nhật lượng cung $a_i$ và cầu $b_j$ tương tự như các phương pháp trước.
+    \begin{itemize}
+        \item Nếu dòng $i^*$ cạn kiệt hàng hóa $a_{i^*} = 0$, loại bỏ dòng này $I := I \setminus \{i^*\}$.
+
+        \item Nếu cột $j^*$ đã được thỏa mãn $b_{j^*} = 0$, loại bỏ cột này $J := J \setminus \{j^*\}$.
+    \end{itemize}
+
+    \item \textbf{Bước 6:} Nếu $I$ và $J$ vẫn còn phần tử, tính lại các $\Delta_i, \Delta_j$ cho phần bảng còn lại và lặp lại từ \textbf{Bước 1} cho đến khi hoàn tất việc phân bổ.
+\end{itemize}
+
+\section{Cơ sở của thuật toán thế vị}
+
+\subsection{Hệ thống thế vị và cước phí tương đối}
+Mô hình bài toán đối ngẫu của bài toán vận tải có các biến đối ngẫu $u_i$ ứng với ràng buộc cung $a_i$ và $v_j$ ứng với ràng buộc cầu $b_j$. Hệ thống các giá trị $(u_i, v_j)$ này được gọi là hệ thống thế vị.
+
+Với một phương án cực biên có tập ô cơ sở $B$, hệ thống thế vị được xác định bằng hệ phương trình:
+\begin{equation}
+    u_i + v_j = c_{ij}, \quad \forall (i, j) \in B
+\end{equation}
+Hệ này có $m+n-1$ phương trình nhưng có $m+n$ ẩn. Do đó, hệ có vô số nghiệm. Để giải, ta thường chọn tùy ý một ẩn bằng 0 (thông thường cho $u_1 = 0$), sau đó tính các ẩn còn lại bằng cách suy ra trực tiếp từ hệ.
+
+\begin{definition}[Ước lượng]
+    Với mỗi ô $(i,j)$ trên bảng vận tải, đại lượng đánh giá (hay ước lượng) được tính bằng:
+    \begin{equation}
+        \Delta_{ij} = u_i + v_j - c_{ij}
+    \end{equation}
+    \textit{Lưu ý:} Đối với các ô cơ sở thuộc tập $G(x)$, luôn có $\Delta_{ij} = 0$.
+\end{definition}
+
+\subsection{Tiêu chuẩn tối ưu}
+    
+\begin{theorem}[Tiêu chuẩn tối ưu] \label{thm:optimality}
+    Một phương án cực biên $x$ với tập ô chọn $G(x)$ là phương án tối ưu nếu tất cả các ước lượng của các ô phi cơ sở đều không dương, tức là:
+    \begin{equation}
+        \Delta_{ij} \le 0, \quad \forall (i,j) \notin G(x)
+    \end{equation}
+\end{theorem}
+Giá trị $\Delta_{ij}$ thể hiện mức độ giảm chi phí nếu ta phân bổ thêm 1 đơn vị hàng hóa vào ô phi cơ sở $(i,j)$. Do đó, nếu mọi $\Delta_{ij} \le 0$, việc đưa thêm hàng vào bất kỳ tuyến đường mới nào cũng không thể làm giảm tổng chi phí, nên phương án hiện tại đã là tối ưu. 
+\begin{itemize}
+    \item Nếu tồn tại ô $(i,j) \notin G(x)$ mà $\Delta_{ij} > 0$, phương án chưa tối ưu, ta có thể cải thiện bằng cách đưa ô này vào cơ sở.
+    \item Nếu thỏa mãn $\Delta_{ij} \le 0$ và tồn tại $\Delta_{i_s, j_s} = 0$ tại ô phi cơ sở $(i_s, j_s)$, bài toán có vô số phương án tối ưu.
+\end{itemize}
+
+\section{Thuật toán tổng quát}
+
+Như đã nói, thuật toán thế vị giải bài toán vận tải xuất phát từ một phương án cực biên không suy biến (có đúng $m+n-1$ thành phần dương).
+
+\textbf{Thuật toán 4.1: Thuật toán thế vị}
+
+\textbf{Bước 0:} 
+Ta bắt đầu với một phương án cực biên không suy biến $x^0 = (x^0_{ij})$ đã được xác định trước. Tập hợp các ô cơ sở tương ứng với phương án này được ký hiệu là $G(x^0) = \{(i,j) \mid x^0_{ij} > 0\}$. Tập $G(x^0)$ phải bao gồm chính xác $(m+n-1)$ phần tử và không tạo thành bất kỳ chu trình nào.
+
+\textbf{Bước 1:} 
+Với mỗi ô cơ sở thuộc $G(x^0)$, ta thiết lập và giải hệ phương trình tuyến tính để tìm các giá trị thế vị $u_i$ cho các trạm phát, $i = 1, \dots, m$ và $v_j$ cho các trạm thu, $j = 1, \dots, n$:
+\[ u_i + v_j = c_{ij}, \quad \forall (i,j) \in G(x^0) \]
+
+\textbf{Bước 2:} 
+Tính giá trị ước lượng $\Delta_{ij}$ cho toàn bộ các ô phi cơ sở theo công thức:
+\[ \Delta_{ij} = u_i + v_j - c_{ij}, \quad \forall (i,j) \notin G(x^0) \]
+Giá trị $\Delta_{ij}$ vừa tính thường được ghi chú vào góc dưới bên phải của mỗi ô $(i,j)$ tương ứng trên bảng.
+
+\textbf{Bước 3:} 
+Dựa vào các ước lượng vừa tính, ta đánh giá chất lượng của phương án hiện tại:
+\begin{itemize}
+    \item Nếu $\forall (i,j) \notin G(x^0), \Delta_{ij} \le 0$: Dừng thuật toán .$x^0$ là phương án tối ưu theo Định lý \ref{thm:optimality}.
+    \item Nếu $\exists (i,j) \notin G(x^0), \Delta_{ij} > 0$: Chuyển sang \textbf{Bước 4}.
+\end{itemize}
+
+\textbf{Bước 4:}
+Quá trình điều chỉnh được thực hiện qua các thao tác sau:
+\begin{itemize}
+    \item[(4.1)] \textbf{Chọn ô đưa vào cơ sở:} Trong số các ô phi cơ sở có $\Delta_{ij} > 0$, ta chọn ra ô $(i_s, j_s)$ mang lại sự cải thiện lớn nhất:
+    \[ \Delta_{i_s, j_s} = \max \{ \Delta_{ij} > 0 \mid (i,j) \notin G(x^0) \} \]
+    \item[(4.2)] \textbf{Thành lập chu trình:} Kết hợp ô $(i_s, j_s)$ vừa chọn với tập ô cơ sở hiện tại $G(x^0)$, ta sẽ luôn tìm được một chu trình khép kín $K$ duy nhất.
+    \item[(4.3)] \textbf{Đánh dấu chu trình:} Bắt đầu từ ô $(i_s, j_s)$ mang dấu $(+)$, ta lần lượt đánh dấu xen kẽ $(-)$ và $(+)$ cho các đỉnh tiếp theo dọc theo chu trình $K$. Ký hiệu tập các ô mang dấu dương là $K^+$ và dấu âm là $K^-$.
+    \item[(4.4)] \textbf{Xác định lượng điều chỉnh và cập nhật:} Tìm lượng hàng lớn nhất có thể điều chuyển dọc theo chu trình (gọi là bước nhảy $\theta$), bằng cách lấy giá trị nhỏ nhất trong số các ô mang dấu trừ:
+    \[ \theta = x^0_{i_r, j_r} = \min \{ x^0_{ij} \mid (i,j) \in K^- \} \]
+    Phương án phân bổ mới $x^1 = (x^1_{ij})$ được tính như sau:
+    \[ 
+    x^1_{ij} = 
+    \begin{cases} 
+        x^0_{ij} + \theta & \text{khi } (i,j) \in K^+ \\
+        x^0_{ij} - \theta & \text{khi } (i,j) \in K^- \\
+        x^0_{ij} & \text{khi } (i,j) \notin K
+    \end{cases} 
+    \]
+    Ô $(i_r, j_r)$ bị rút lượng hàng về $0$ nên sẽ bị loại khỏi cơ sở. Tập ô chọn mới được cập nhật:
+    \[ G(x^1) := (G(x^0) \setminus \{(i_r, j_r)\}) \cup \{(i_s, j_s)\} \]
+    \item[(4.5)] \textbf{Lặp lại quá trình:} Gán phương án mới $x^1$ thành $x^0$, cập nhật lại $G(x^0) := G(x^1)$ và quay trở về \textbf{Bước 1} để tiếp tục kiểm tra.
+\end{itemize}
+
+\section{Hiện tượng phương án cực biên suy biến}
+
+\textbf{1. Phương án cực biên suy biến} \\
+Theo lý thuyết, một phương án cực biên không suy biến của bài toán kích thước $(m \times n)$ luôn có chính xác $m+n-1$ ô cơ sở. Tuy nhiên, trong quá trình giải bài toán, số lượng ô cơ sở thực tế có thể tụt xuống thấp hơn con số này. Khi đó, ta gọi phương án này đã bị \textbf{suy biến}.
+
+Nguyên nhân gây ra hiện tượng suy biến thường xuất phát từ hai thời điểm:
+\begin{itemize}
+    \item Khi phân bổ ở bước 0, lượng cung của một trạm phát và lượng cầu của một trạm thu tình cờ cùng bằng 0 cùng một lúc.
+    \item Khi xác định bước nhảy $\theta$ ở bước 4, có nhiều hơn một ô mang dấu $(-)$ cùng đạt chung giá trị cực tiểu. Sau khi trừ đi $\theta$, sẽ có nhiều ô đồng loạt tụt về mức $0$ và cùng bị loại khỏi tập cơ sở, làm lượng ô cơ sở tụt dốc.
+\end{itemize}
+
+\noindent \textbf{2. Phương pháp khắc phục} \\
+Hệ quả của suy biến là ta không có đủ $m+n-1$ ô cơ sở để giải hệ phương trình tính thế vị tính $u_i, v_j$. Để giải quyết nút thắt này, ta áp dụng quy tắc bổ sung \textit{ô cơ sở ảo}:
+\begin{itemize}
+    \item Ta chủ động chọn tạm thêm một hoặc vài ô đang có lượng phân bổ bằng $0$ vào tập cơ sở $G(x^0)$, sao cho tổng số ô cơ sở được khôi phục về đúng mức $m+n-1$ phần tử.
+    \item Các ô được chọn thêm này tuyệt đối không được phép tạo thành chu trình khép kín với các ô cơ sở hiện có.
+    \item Trên bảng vận tải, ta điền trực tiếp số $0$ vào ô vừa chọn. Điều này giúp phân biệt đây là một ô cơ sở có giá trị phân bổ bằng 0 chứ không phải là một ô phi cơ sở trống trơn.
+\end{itemize}
+
+Các ô số $0$ này có vai trò hoàn toàn giống với các ô cơ sở dương khác. Chúng được dùng để tính các thế vị $u_i + v_j = c_{ij}$ và vẫn có thể tham gia vào việc lập chu trình ở các lần lặp tiếp theo.
+
+Nếu một ô số $0$ mang dấu $(-)$ trong chu trình, bước nhảy điều chỉnh $\theta$ lúc này sẽ bị ép bằng $0$. Tuy hàm mục tiêu không được làm nhỏ đi, nhưng cấu trúc của tập ô cơ sở đã được làm mới, tạo tiền đề để thuật toán thoát khỏi trạng thái bế tắc hiện tại và tiếp tục tiến tới phương án cực biên tối ưu.
+
+\end{document}

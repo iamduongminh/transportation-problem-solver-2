@@ -26,7 +26,7 @@
           <span class="brand-sub">Bài toán vận tải cân bằng thu phát</span>
         </div>
       </div>
-      <div class="header-btns">
+      <div id="headerBtns" class="header-btns hidden">
         <button class="btn btn-ghost" onclick="runDemo()">Ví dụ mẫu</button>
         <button class="btn btn-primary" onclick="openModal()">Nhập dữ liệu</button>
       </div>
@@ -59,6 +59,13 @@
             <span class="obj-label">f(x)</span>
             <span class="obj-value" id="objDisplay">—</span>
           </div>
+        </div>
+        <div class="log-controls" style="padding: 10px 18px; border-bottom: 1px solid var(--bdr); display: flex; align-items: center; gap: 10px; background: var(--bg2);">
+          <label style="font-size: 12px; color: var(--muted); white-space: nowrap;">Khởi tạo:</label>
+          <select id="methodSelect" style="padding: 4px 8px; font-size: 12px; border-radius: var(--r-sm); background: var(--bg3); color: var(--text); border: 1px solid var(--bdr); outline: none; cursor: pointer; width: auto; font-family: inherit;" onchange="changeMethod(this.value)">
+            <option value="nw" style="background: var(--bg3); color: var(--text);">Góc tây bắc</option>
+            <option value="lc" style="background: var(--bg3); color: var(--text);">Cực tiểu chi phí</option>
+          </select>
         </div>
         <div class="log-list" id="logList"></div>
       </div>

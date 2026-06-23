@@ -1,0 +1,103 @@
+\documentclass[a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{scrextend}
+\changefontsizes{13pt}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,      
+    urlcolor=blue,
+    citecolor=black,
+    pdfborder = {0 0 0}
+}
+\usepackage{subfiles} % BẮT BUỘC ĐỂ CHIA FILE
+\usepackage{microtype}
+\usepackage{setspace}
+\setstretch{1.3} % Dãn dòng chuẩn giáo trình
+\setcounter{tocdepth}{2}
+
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{scalerel}
+\usepackage{bm}
+
+\usepackage[left=3.5cm,right=2.5cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textit{Bài toán vận tải và thuật toán thế vị}} 
+\fancyhead[R]{\textit{GVHD: Bùi Xuân Diệu}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{justification=centering, singlelinecheck=false}
+\usepackage{tikz, tkz-euclide}
+\usetikzlibrary{arrows,positioning,matrix}
+\usepackage{hyperref}
+
+\usepackage{array, booktabs, multirow, longtable, tabularx}
+\usepackage{diagbox}
+
+\usepackage{enumerate, enumitem}
+
+\usepackage{amsthm}
+\theoremstyle{definition}
+\newtheorem{definition}{Định nghĩa}[chapter] 
+\newtheorem{theorem}{Định lý}[chapter]
+\newtheorem{lemma}{Bổ đề}[chapter]
+\newtheorem{corollary}{Hệ quả}[chapter]
+\newtheorem{property}{Tính chất}[chapter]
+\newtheorem{example}{Ví dụ}[chapter]
+\renewenvironment{proof}{{\bfseries Chứng minh.}}{\hfill$\square$\vspace{0.5cm}}
+
+% --- THÊM CÁC MÔI TRƯỜNG KHÔNG ĐÁNH SỐ Ở ĐÂY ---
+\newtheorem*{note}{Ghi chú}
+\newtheorem*{conclusion}{Kết luận}
+
+% --- ĐỊNH NGHĨA MACRO CHO BẢNG VẬN TẢI ---
+\newcommand{\cb}[2]{\multicolumn{1}{c|}{\begin{tabular}{@{}p{1.2cm}@{}} \hfill \scriptsize #2 \\[-1ex] \centering \textbf{#1} \vspace{0.5ex} \end{tabular}}}
+\newcommand{\cn}[1]{\multicolumn{1}{c|}{\begin{tabular}{@{}p{1.2cm} @{}} \hfill \scriptsize #1 \\[-1ex] \centering \phantom{\textbf{0}} \vspace{0.5ex} \end{tabular}}}
+\newcommand{\mcc}[1]{\makebox[2.2em]{$#1$}}
+
+% --- TÀI LIỆU THAM KHẢO ---
+\usepackage[backend=biber,style=ieee]{biblatex}
+\addbibresource{TLTK.bib}
+
+\begin{document}
+    
+    \pagenumbering{gobble}
+    \subfile{Bia}
+    
+    \clearpage
+    \pagenumbering{roman}
+    \tableofcontents
+    \newpage
+
+    \pagenumbering{arabic}
+    \subfile{Loimodau}
+
+    \newpage
+    \subfile{Chapter/1}
+
+    \newpage
+    \subfile{Chapter/2}
+
+    \newpage
+    \subfile{Chapter/3}
+
+    \newpage
+    \subfile{Ketluan}
+
+    \newpage
+    \phantomsection
+    \addcontentsline{toc}{chapter}{Tài liệu tham khảo}
+    \printbibliography[title={Tài liệu tham khảo}]
+
+\end{document}
